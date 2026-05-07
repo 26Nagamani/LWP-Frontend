@@ -2,6 +2,7 @@ import { useEffect, useState, useRef } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import toast from "react-hot-toast";
 import { X } from "lucide-react";
+import { useLocation } from "react-router-dom";
 
 import {
   getVisual,
@@ -16,6 +17,8 @@ interface ActivityVisual {
   activity_id: string;
   step_number: number;
   image_url?: string;
+  audio_url?: string;
+  speak_line?: string;
   question: {
     question: string;
     options: Record<string, string> | string;
@@ -44,6 +47,8 @@ export default function ActivityPreviewPage() {
   const [isActivityModalOpen, setIsActivityModalOpen] = useState(false);
 
   const explanationRef = useRef<HTMLDivElement | null>(null);
+  const location = useLocation();
+  const stateData = location.state?.data;
 
   const is404 = (err: any) =>
     err?.status === 404 ||
@@ -87,8 +92,15 @@ export default function ActivityPreviewPage() {
   };
 
   useEffect(() => {
-    fetchVisual();
-  }, [step]);
+  if (stateData) {
+    setVisual(parseVisual(stateData));
+    setLoading(false);
+    return;
+  }
+
+  // fallback (refresh case)
+  fetchVisual();
+}, [step]);
 
   /* ---------------- GENERATE (current step) ---------------- */
   const handleGenerate = async () => {
@@ -141,6 +153,11 @@ export default function ActivityPreviewPage() {
       }
     }
   };
+  const cleanUrl = (url?: string) => {
+    if (!url) return "";
+    return url.replace(/%22/g, "").replace(/"/g, "").trim();
+  };
+  
 
   return (
     <div className="min-h-screen bg-gray-100 flex flex-col">
@@ -190,6 +207,27 @@ export default function ActivityPreviewPage() {
                 )}
               </div>
 
+              {visual.audio_url && (
+                  <div className="bg-gray-100 rounded-lg p-3 mb-3">
+                    <div className="text-xs font-semibold uppercase opacity-60 mb-1">
+                      Audio Explanation
+                    </div>
+
+                    <audio controls className="w-full mb-2">
+                      <source
+                        src={cleanUrl(visual.audio_url)}
+                        type="audio/mpeg"
+                      />
+                      Your browser does not support the audio element.
+                    </audio>
+
+                    {visual.speak_line && (
+                      <p className="text-sm italic text-gray-600">
+                        “{visual.speak_line}”
+                      </p>
+                    )}
+                  </div>
+                )}
               {/* QUESTION */}
               <p className="font-semibold mb-3">{visual.question.question}</p>
 

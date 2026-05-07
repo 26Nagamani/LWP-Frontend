@@ -69,48 +69,66 @@ export default function ActivityPage() {
     loadTopic();
   }, [topicId]);
 
-  /**
-   * PREVIEW BUTTON → navigate directly to screen data page
-   */
   const handlePreviewClick = () => {
     if (!topicId) return;
     navigate(`/admin/screen-data/${topicId}`);
   };
+ const handleTitleClick = async (stepNumber: number) => {
+  if (!topicId) return;
 
-  /**
-   * STEP CLICK → if no activity, open modal. Otherwise navigate to screen data.
-   */
-  const handleTitleClick = async (stepNumber: number) => {
-    if (!topicId) return;
+  setSelectedStep(stepNumber);
+  setFetchingActivity(true);
 
-    setSelectedStep(stepNumber);
-    setFetchingActivity(true);
+  try {
+    const [visualResult, interactiveResult] = await Promise.allSettled([
+      getVisual(topicId, stepNumber),
+      getInteractiveVisual(topicId, stepNumber),
+    ]);
 
-    try {
-      const [visualResult, interactiveResult] = await Promise.allSettled([
-        getVisual(topicId, stepNumber),
-        getInteractiveVisual(topicId, stepNumber),
-      ]);
+    const visual =
+      visualResult.status === "fulfilled" ? visualResult.value : null;
 
-      const both404 = is404(visualResult) && is404(interactiveResult);
-
-      if (both404) {
-        setIsModalOpen(true);
-      } else {
-        // keep original behavior — navigate to mode-specific preview
-        const mode = interactiveResult.status === "fulfilled" ? "interactive" : "options";
-        navigate(`/admin/activity/${topicId}/${stepNumber}/${mode}`);
-      }
-    } catch (err) {
-      console.error(err);
-    } finally {
-      setFetchingActivity(false);
+    const interactive =
+      interactiveResult.status === "fulfilled"
+        ? interactiveResult.value
+        : null;
+    if (!visual && !interactive) {
+      setIsModalOpen(true);
+      return;
     }
-  };
+    if (interactive?.activity_id || interactive?.image_url) {
+      navigate(
+        `/admin/activity/${topicId}/${stepNumber}/interactive`,
+        {
+          state: {
+            data: interactive,
+            type: "interactive",
+          },
+        }
+      );
+      return;
+    }
+    if (visual?.image_url || visual?.question) {
+      navigate(
+        `/admin/activity/${topicId}/${stepNumber}/options`,
+        {
+          state: {
+            data: visual,
+            type: "visual",
+          },
+        }
+      );
+      return;
+    }
 
-  if (loading) {
-    return <div className="p-6 text-gray-400">Loading steps...</div>;
+    setIsModalOpen(true);
+  } catch (err) {
+    console.error(err);
+    setIsModalOpen(true);
+  } finally {
+    setFetchingActivity(false);
   }
+};
 
   return (
     <div className="relative min-h-screen bg-white p-6 flex flex-col">

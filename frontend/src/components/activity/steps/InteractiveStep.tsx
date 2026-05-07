@@ -3,11 +3,14 @@ import React, { useEffect, useState } from "react";
 interface InteractiveStepProps {
   src: string;
   question: string;
+  audio?: string;        
+  speak_line?: string;
   explanation?: string;
   onNext: () => void;
 }
 
-const InteractiveStep: React.FC<InteractiveStepProps> = ({ src, question, explanation, onNext }) => {
+const InteractiveStep: React.FC<InteractiveStepProps> = ({ src, question,audio,      
+  speak_line, explanation, onNext }) => {
   const [htmlContent, setHtmlContent] = useState<string | null>(null);
   const [error, setError] = useState(false);
   const [showExplanation, setShowExplanation] = useState(false);
@@ -49,6 +52,19 @@ const InteractiveStep: React.FC<InteractiveStepProps> = ({ src, question, explan
           sandbox="allow-scripts allow-downloads"
         />
       )}
+      {audio && (
+          <div className="bg-gray-100 p-3 m-4 rounded-lg">
+            <audio controls className="w-full">
+              <source src={audio} type="audio/mpeg" />
+            </audio>
+
+            {speak_line && (
+              <p className="text-sm italic text-gray-600 mt-2">
+                “{speak_line}”
+              </p>
+            )}
+          </div>
+        )}
 
       {/* question + explanation */}
       <div className="p-6 border-t">
