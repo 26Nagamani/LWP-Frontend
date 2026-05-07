@@ -2,8 +2,10 @@ import React, { useState } from "react";
 import type { OptionItem } from "../../../types/activity.types";
 
 interface OptionsStepProps {
-  image?: string;
+  image: string;
   question: string;
+  audio?: string;        
+  speak_line?: string; 
   options: OptionItem[];
   correctId: string;
   explanation?: string;
@@ -14,6 +16,8 @@ interface OptionsStepProps {
 const OptionsStep: React.FC<OptionsStepProps> = ({
   image,
   question,
+  audio,        
+  speak_line,
   options,
   correctId,
   explanation,
@@ -45,6 +49,19 @@ const OptionsStep: React.FC<OptionsStepProps> = ({
           className="w-full object-contain"
         />
       )}
+      {audio && (
+          <div className="bg-gray-100 rounded-lg p-3 m-4">
+            <audio controls className="w-full">
+              <source src={audio} type="audio/mpeg" />
+            </audio>
+
+            {speak_line && (
+              <p className="text-sm italic text-gray-600 mt-2">
+                “{speak_line}”
+              </p>
+            )}
+          </div>
+        )}
 
       {/* question */}
       <div className="p-6 border-t">

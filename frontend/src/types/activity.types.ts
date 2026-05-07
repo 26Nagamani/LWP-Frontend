@@ -14,8 +14,10 @@ export interface RawStep {
   "@_number": string;
   "@_mode": StepMode;
   navigation?: Navigation;
-  image?: string;
+  image: string;
   question?: string;
+  audio?: string;         
+  speak_line?: string; 
   options?: {
     option: OptionItem | OptionItem[];
   };
@@ -27,9 +29,12 @@ export interface ParsedStep {
   number: string;
   mode: StepMode;
   navigation: Navigation;
-  image?: string;
+  image: string;
   question?: string;
+  audio?: string;         
+  speak_line?: string; 
   options?: OptionItem[];
   explanation?: string;
   answer?: string;
 }
+

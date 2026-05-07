@@ -8,7 +8,7 @@ export const generateVisual = (topicId: string, stepNumber: number, type: string
 };
 
 export const getVisual = (topicId: string, stepNumber: number) => {
-  return fetchClient.get<any>(`/activity/get-visuals/${topicId}/${stepNumber}`);
+  return fetchClient.get<any>(`/activity/get-visual/${topicId}/${stepNumber}`);
 };
 
 export const generateInteractiveVisual = (

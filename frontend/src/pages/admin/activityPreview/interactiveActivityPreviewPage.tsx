@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import toast from "react-hot-toast";
+import { useLocation } from "react-router-dom";
 
 import {
   getInteractiveVisual,
@@ -15,6 +16,8 @@ interface InteractiveVisual {
   activity_id: string;
   step_number: number;
   image_url: string;
+  audio_url?: string;
+  speak_line?: string;
   question: {
     question: string;
     correct_answer: string;
@@ -35,6 +38,9 @@ export default function InteractivePreviewPage() {
   const [showExplanation, setShowExplanation] = useState(false);
   const [nextStepNotFound, setNextStepNotFound] = useState(false);
   const [isActivityModalOpen, setIsActivityModalOpen] = useState(false);
+
+  const location = useLocation();
+  const stateData = location.state?.data;
 
   const is404 = (err: any) =>
     err?.status === 404 ||
@@ -68,9 +74,24 @@ export default function InteractivePreviewPage() {
     }
   };
 
-  useEffect(() => {
-    fetchVisual();
-  }, [step]);
+ useEffect(() => {
+  const load = async () => {
+    if (stateData) {
+      setVisual(stateData);
+
+      const res = await fetch(stateData.image_url);
+      const html = await res.text();
+      setIframeContent(html);
+
+      setLoading(false);
+      return;
+    }
+
+    await fetchVisual();
+  };
+
+  load();
+}, [step]);
 
   /* ---------------- GENERATE ---------------- */
   const handleGenerate = async () => {
@@ -101,6 +122,11 @@ export default function InteractivePreviewPage() {
         setNextStepNotFound(true);
       }
     }
+  };
+  // helper (put above return)
+  const cleanUrl = (url?: string) => {
+    if (!url) return "";
+    return url.replace(/%22/g, "").replace(/"/g, "").trim();
   };
 
   return (
@@ -147,6 +173,27 @@ export default function InteractivePreviewPage() {
                 style={{ height: "580px", border: "none" }}
                 title={`Interactive activity step ${step}`}
               />
+             {visual.audio_url && (
+                  <div className="bg-gray-100 rounded-lg p-3 mb-3">
+                    <div className="text-xs font-semibold uppercase opacity-60 mb-1">
+                      Audio Explanation
+                    </div>
+
+                    <audio controls className="w-full mb-2">
+                      <source
+                        src={cleanUrl(visual.audio_url)}
+                        type="audio/mpeg"
+                      />
+                      Your browser does not support the audio element.
+                    </audio>
+
+                    {visual.speak_line && (
+                      <p className="text-sm italic text-gray-600">
+                        “{visual.speak_line}”
+                      </p>
+                    )}
+                  </div>
+                )}
 
               {/* QUESTION + EXPLANATION */}
               <div className="p-6 border-t">
